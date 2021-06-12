@@ -2,12 +2,13 @@ package ua.goit.petstore.util;
 
 import com.google.gson.reflect.TypeToken;
 import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.message.BasicNameValuePair;
 import ua.goit.petstore.model.ApiResponse;
 import ua.goit.petstore.model.Pet;
 import ua.goit.petstore.model.PetStatus;
@@ -16,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PetClient extends HttpUtil<Pet> {
@@ -32,7 +34,7 @@ public class PetClient extends HttpUtil<Pet> {
         return GSON.fromJson(response.body(), Pet.class);
     }
 
-    public static int uploadImage(int id, String metaData, File image) throws IOException, InterruptedException {
+    public static ApiResponse uploadImage(int id, String metaData, File image) throws IOException, InterruptedException {
         FileBody fileBody = new FileBody(image, ContentType.DEFAULT_BINARY);
         StringBody stringBody = new StringBody(metaData, ContentType.MULTIPART_FORM_DATA);
         MultipartEntityBuilder builder = MultipartEntityBuilder.create()
@@ -40,16 +42,16 @@ public class PetClient extends HttpUtil<Pet> {
                 .addPart("additionalMetadata", stringBody)
                 .addPart("file", fileBody);
         HttpEntity build = builder.build();
-        CloseableHttpResponse closeableHttpResponse = sendMultipartEntity(String.format("%s%s%d%s", HOST, UPDATE_PET,
+        return sendMultipartEntity(String.format("%s%s%d%s", HOST, UPDATE_PET,
                 id, UPLOAD_IMAGE), build);
-        return closeableHttpResponse.getStatusLine().getStatusCode();
     }
 
     public static ApiResponse updatePet(int id, Pet newPet) throws IOException, InterruptedException {
-        HttpRequest request = HttpUtil.requestWithBody("PUT", String.format("%s%s%d", HOST, UPDATE_PET, id),
-                newPet);
-        HttpResponse<String> response = HttpUtil.getResponse(request);
-        return GSON.fromJson(response.body(), ApiResponse.class);
+        String url = String.format("%s%s%d", HOST, UPDATE_PET, id);
+        List<NameValuePair> form = new ArrayList<>();
+        form.add(new BasicNameValuePair("name", newPet.getName()));
+        form.add(new BasicNameValuePair("status", newPet.getStatus().name()));
+        return sendPostEncoded(url, form);
     }
 
     public static Pet getPetById(int id) throws IOException, InterruptedException {

@@ -86,8 +86,8 @@ public class Update extends AbstractCommand implements Command {
         String metaData = view.read();
         File image = readFileFromConsole();
         try {
-            int code = PetClient.uploadImage(id, metaData, image);
-            resultOutput(code);
+            ApiResponse apiResponse = PetClient.uploadImage(id, metaData, image);
+            resultOutput(apiResponse);
         } catch (IOException | InterruptedException ex) {
             view.write(ex.getMessage());
         }

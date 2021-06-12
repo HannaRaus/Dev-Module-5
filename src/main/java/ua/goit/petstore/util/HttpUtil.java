@@ -1,20 +1,27 @@
 package ua.goit.petstore.util;
 
 import com.google.gson.Gson;
+import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import ua.goit.petstore.model.ApiResponse;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 
 public class HttpUtil<T> {
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
+    private static final CloseableHttpClient DEFAULT_CLIENT = HttpClients.createDefault();
+    private static final ResponseHandler RESPONSE_HANDLER = new ResponseHandler();
+
     protected static final Gson GSON = new Gson();
 
     protected static final String HOST = "https://petstore.swagger.io/v2";
@@ -45,11 +52,20 @@ public class HttpUtil<T> {
         return CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
-    protected static CloseableHttpResponse sendMultipartEntity(String url, HttpEntity entity) throws IOException {
-        CloseableHttpClient defaultClient = HttpClients.createDefault();
+    protected static ApiResponse sendMultipartEntity(String url, HttpEntity entity) throws IOException {
         HttpPost post = new HttpPost(url);
         post.setEntity(entity);
-        return defaultClient.execute(post);
+        String execute = DEFAULT_CLIENT.execute(post, RESPONSE_HANDLER);
+        return GSON.fromJson(execute, ApiResponse.class);
     }
+
+    protected static ApiResponse sendPostEncoded(String url, List<NameValuePair> form) throws IOException {
+        UrlEncodedFormEntity entity = new UrlEncodedFormEntity(form, Consts.UTF_8);
+        HttpPost post = new HttpPost(url);
+        post.setEntity(entity);
+        String execute = DEFAULT_CLIENT.execute(post, RESPONSE_HANDLER);
+        return GSON.fromJson(execute, ApiResponse.class);
+    }
+
 
 }
