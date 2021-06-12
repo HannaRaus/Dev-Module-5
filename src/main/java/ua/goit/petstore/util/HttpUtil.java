@@ -1,6 +1,11 @@
 package ua.goit.petstore.util;
 
 import com.google.gson.Gson;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
 import java.io.IOException;
 import java.net.URI;
@@ -38,6 +43,13 @@ public class HttpUtil<T> {
 
     protected static HttpResponse<String> getResponse(HttpRequest request) throws IOException, InterruptedException {
         return CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
+    protected static CloseableHttpResponse sendMultipartEntity(String url, HttpEntity entity) throws IOException {
+        CloseableHttpClient defaultClient = HttpClients.createDefault();
+        HttpPost post = new HttpPost(url);
+        post.setEntity(entity);
+        return defaultClient.execute(post);
     }
 
 }

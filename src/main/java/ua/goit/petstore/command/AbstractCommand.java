@@ -1,8 +1,12 @@
 package ua.goit.petstore.command;
 
+import org.apache.commons.io.FilenameUtils;
 import ua.goit.petstore.model.*;
 import ua.goit.petstore.view.View;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,7 +19,7 @@ public abstract class AbstractCommand {
         this.view = view;
     }
 
-    protected int getIntegerFromConsole(String message) {
+    protected int readIntegerFromConsole(String message) {
         int number = 0;
         boolean isFieldBlank = true;
         while (isFieldBlank) {
@@ -35,7 +39,7 @@ public abstract class AbstractCommand {
     }
 
     protected User readUserFromConsole() {
-        int id = getIntegerFromConsole("Enter user id");
+        int id = readIntegerFromConsole("Enter user id");
         view.write("Enter user name");
         String userName = view.read();
         view.write("Enter user first name");
@@ -48,33 +52,33 @@ public abstract class AbstractCommand {
         String password = view.read();
         view.write("Enter user phone number");
         String phone = view.read();
-        int status = getIntegerFromConsole("Enter user status");
+        int status = readIntegerFromConsole("Enter user status");
         return new User(id, userName, firstName, lastName, email, password, phone, status);
     }
 
     protected Pet readPetFromConsole() {
-        int id = getIntegerFromConsole("Enter pet id");
-        Category category = getCategoryFromConsole();
+        int id = readIntegerFromConsole("Enter pet id");
+        Category category = readCategoryFromConsole();
         view.write("Enter pet name");
         String name = view.read();
-        List<String> photoUrls = getPhotoUrlsFromConsole();
-        List<Tag> tags = getTagsFromConsole();
-        PetStatus status = getPetStatusFromConsole();
+        List<String> photoUrls = readPhotoUrlsFromConsole();
+        List<Tag> tags = readTagsFromConsole();
+        PetStatus status = readPetStatusFromConsole();
         return new Pet(id, category, name, photoUrls, tags, status);
     }
 
-    private Category getCategoryFromConsole() {
-        int id = getIntegerFromConsole("Enter category id");
+    private Category readCategoryFromConsole() {
+        int id = readIntegerFromConsole("Enter category id");
         view.write("Enter category name");
         String name = view.read();
         return new Category(id, name);
     }
 
-    private List<Tag> getTagsFromConsole() {
+    private List<Tag> readTagsFromConsole() {
         List<Tag> tags = new ArrayList<>();
         boolean running = true;
         while (running) {
-            tags.add(getTagFromConsole());
+            tags.add(readTagFromConsole());
             view.write("Successfully added.Press 'enter' to continue\nEnter 'ok' when finish");
             if (view.read().equalsIgnoreCase("ok")) {
                 running = false;
@@ -83,7 +87,7 @@ public abstract class AbstractCommand {
         return tags;
     }
 
-    protected List<String> getPhotoUrlsFromConsole() {
+    protected List<String> readPhotoUrlsFromConsole() {
         List<String> photoUrls = new ArrayList<>();
         boolean running = true;
         while (running) {
@@ -97,24 +101,48 @@ public abstract class AbstractCommand {
         return photoUrls;
     }
 
-    private Tag getTagFromConsole() {
-        int id = getIntegerFromConsole("Enter tag id");
+    protected File readFileFromConsole() {
+        File image = null;
+        boolean isFieldBlank = true;
+        while (isFieldBlank) {
+            try {
+                view.write("Enter photo path");
+                String imagePath = view.read();
+                FileReader reader = new FileReader(imagePath);
+                String extension = FilenameUtils.getExtension(imagePath);
+                if (extension.equalsIgnoreCase("jpeg") ||
+                        extension.equalsIgnoreCase("png") ||
+                        extension.equalsIgnoreCase("jpg")) {
+                    image = new File(imagePath);
+                    isFieldBlank = false;
+                } else {
+                    view.write("Following file is not an image");
+                }
+            } catch (FileNotFoundException ex) {
+                view.write("Wrong format, please, enter the image path.");
+            }
+        }
+        return image;
+    }
+
+    private Tag readTagFromConsole() {
+        int id = readIntegerFromConsole("Enter tag id");
         view.write("Enter tag name");
         String name = view.read();
         return new Tag(id, name);
     }
 
     protected Order readOrderFromConsole() {
-        int id = getIntegerFromConsole("Enter order id");
-        int petId = getIntegerFromConsole("Enter pet id");
-        int quantity = getIntegerFromConsole("Enter quantity");
+        int id = readIntegerFromConsole("Enter order id");
+        int petId = readIntegerFromConsole("Enter pet id");
+        int quantity = readIntegerFromConsole("Enter quantity");
         String shipDate = LocalDate.now().toString();
-        OrderStatus status = getOrderStatusFromConsole();
-        boolean complete = getBooleanFromConsole();
+        OrderStatus status = readOrderStatusFromConsole();
+        boolean complete = readBooleanFromConsole();
         return new Order(id, petId, quantity, shipDate, status, complete);
     }
 
-    protected OrderStatus getOrderStatusFromConsole() {
+    protected OrderStatus readOrderStatusFromConsole() {
         OrderStatus orderStatus = null;
         boolean isFieldBlank = true;
         while (isFieldBlank) {
@@ -130,7 +158,7 @@ public abstract class AbstractCommand {
         return orderStatus;
     }
 
-    protected PetStatus getPetStatusFromConsole() {
+    protected PetStatus readPetStatusFromConsole() {
         PetStatus orderStatus = null;
         boolean isFieldBlank = true;
         while (isFieldBlank) {
@@ -146,7 +174,7 @@ public abstract class AbstractCommand {
         return orderStatus;
     }
 
-    protected boolean getBooleanFromConsole() {
+    protected boolean readBooleanFromConsole() {
         boolean complete = false;
         boolean isFieldBlank = true;
         while (isFieldBlank) {
@@ -166,8 +194,16 @@ public abstract class AbstractCommand {
             view.write("Updated successfully");
         } else {
             view.write("""
-                        Failed to update
-                        Response -""" + response.getMessage());
+                    Failed to update
+                    Response -""" + response.getMessage());
+        }
+    }
+
+    protected void resultOutput(int code) {
+        if (code == 200) {
+            view.write("Updated successfully");
+        } else {
+            view.write("Failed to update");
         }
     }
 }

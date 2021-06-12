@@ -84,7 +84,7 @@ public class Read extends AbstractCommand implements Command {
     }
 
     private void getPetByStatus() {
-        PetStatus status = getPetStatusFromConsole();
+        PetStatus status = readPetStatusFromConsole();
         try {
             List<Pet> pets = PetClient.getPetByStatus(status);
             pets.forEach(pet -> view.write(pet.toString()));
@@ -94,10 +94,10 @@ public class Read extends AbstractCommand implements Command {
     }
 
     private void getPetById() {
-        int id = getIntegerFromConsole("Enter pet id");
+        int id = readIntegerFromConsole("Enter pet id");
         try {
             Pet pet = PetClient.getPetById(id);
-            view.write("Founded user:\n" + pet);
+            view.write("Founded pet:\n" + pet);
         } catch (IOException | InterruptedException ex) {
             view.write(ex.getMessage());
         }
@@ -129,7 +129,7 @@ public class Read extends AbstractCommand implements Command {
     private void getOrderById() {
         boolean running = true;
         while (running) {
-            int id = getIntegerFromConsole("Enter order id in range 1-10");
+            int id = readIntegerFromConsole("Enter order id in range 1-10");
             if (id < 1 || id > 10) {
                 view.write("Wrong data, please, enter order id in range 1-10");
             } else {

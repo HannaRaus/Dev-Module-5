@@ -8,8 +8,8 @@ import ua.goit.petstore.util.PetClient;
 import ua.goit.petstore.util.UserClient;
 import ua.goit.petstore.view.View;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 public class Update extends AbstractCommand implements Command {
     private static final String MENU = """
@@ -65,12 +65,12 @@ public class Update extends AbstractCommand implements Command {
     }
 
     private void updatePet() {
-        int id = getIntegerFromConsole("Enter pet id you would like to update");
+        int id = readIntegerFromConsole("Enter pet id you would like to update");
         try {
             Pet petToUpdate = PetClient.getPetById(id);
             view.write("Enter pet new name");
             String newName = view.read();
-            PetStatus newStatus = getPetStatusFromConsole();
+            PetStatus newStatus = readPetStatusFromConsole();
             petToUpdate.setName(newName);
             petToUpdate.setStatus(newStatus);
             ApiResponse apiResponse = PetClient.updatePet(id, petToUpdate);
@@ -81,11 +81,13 @@ public class Update extends AbstractCommand implements Command {
     }
 
     private void addPhotos() {
-        int id = getIntegerFromConsole("Enter pet id you would like to update");
-        List<String> photoUrls = getPhotoUrlsFromConsole();
+        int id = readIntegerFromConsole("Enter pet id you would like to update");
+        view.write("Enter description to photo");
+        String metaData = view.read();
+        File image = readFileFromConsole();
         try {
-            ApiResponse apiResponse = PetClient.uploadImage(id, photoUrls);
-            resultOutput(apiResponse);
+            int code = PetClient.uploadImage(id, metaData, image);
+            resultOutput(code);
         } catch (IOException | InterruptedException ex) {
             view.write(ex.getMessage());
         }

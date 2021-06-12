@@ -1,10 +1,18 @@
 package ua.goit.petstore.util;
 
 import com.google.gson.reflect.TypeToken;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
 import ua.goit.petstore.model.ApiResponse;
 import ua.goit.petstore.model.Pet;
 import ua.goit.petstore.model.PetStatus;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -24,15 +32,21 @@ public class PetClient extends HttpUtil<Pet> {
         return GSON.fromJson(response.body(), Pet.class);
     }
 
-    public static ApiResponse uploadImage(int id, List<String> images) throws IOException, InterruptedException {
-        HttpRequest request = HttpUtil.requestWithBody("POST", String.format("%s%s%d%S", HOST, UPDATE_PET,
-                id, UPLOAD_IMAGE), images);
-        HttpResponse<String> response = HttpUtil.getResponse(request);
-        return GSON.fromJson(response.body(), ApiResponse.class);
+    public static int uploadImage(int id, String metaData, File image) throws IOException, InterruptedException {
+        FileBody fileBody = new FileBody(image, ContentType.DEFAULT_BINARY);
+        StringBody stringBody = new StringBody(metaData, ContentType.MULTIPART_FORM_DATA);
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create()
+                .setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
+                .addPart("additionalMetadata", stringBody)
+                .addPart("file", fileBody);
+        HttpEntity build = builder.build();
+        CloseableHttpResponse closeableHttpResponse = sendMultipartEntity(String.format("%s%s%d%s", HOST, UPDATE_PET,
+                id, UPLOAD_IMAGE), build);
+        return closeableHttpResponse.getStatusLine().getStatusCode();
     }
 
     public static ApiResponse updatePet(int id, Pet newPet) throws IOException, InterruptedException {
-        HttpRequest request = HttpUtil.requestWithBody("POST", String.format("%s%s%d", HOST, UPDATE_PET, id),
+        HttpRequest request = HttpUtil.requestWithBody("PUT", String.format("%s%s%d", HOST, UPDATE_PET, id),
                 newPet);
         HttpResponse<String> response = HttpUtil.getResponse(request);
         return GSON.fromJson(response.body(), ApiResponse.class);
