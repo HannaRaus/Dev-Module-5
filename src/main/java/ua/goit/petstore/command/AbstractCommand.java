@@ -108,7 +108,7 @@ public abstract class AbstractCommand {
             try {
                 view.write("Enter photo path");
                 String imagePath = view.read();
-                FileReader reader = new FileReader(imagePath);
+                new FileReader(imagePath);
                 String extension = FilenameUtils.getExtension(imagePath);
                 if (extension.equalsIgnoreCase("jpeg") ||
                         extension.equalsIgnoreCase("png") ||
@@ -199,11 +199,4 @@ public abstract class AbstractCommand {
         }
     }
 
-    protected void resultOutput(int code) {
-        if (code == 200) {
-            view.write("Updated successfully");
-        } else {
-            view.write("Failed to update");
-        }
-    }
 }
